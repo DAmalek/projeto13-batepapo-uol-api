@@ -29,7 +29,11 @@ app.use(cors());
 app.post("/participants", async (req, res) => {
   const { name } = req.body;
 
-  const validation = usersSchema.validate(name, { abortEarly: false });
+  const validation = usersSchema.validate({ name }, { abortEarly: false });
+  if (validation.error) {
+    const errors = validation.error.details.map(detail => detail.message)
+    res.send(errors)
+  }
 
   const entryMessage = {
     from: name,
@@ -58,8 +62,24 @@ app.post("/participants", async (req, res) => {
     res.status(201).send("ok");
   } catch (error) {
     console.log(error);
+    res.sendStatus(500);
   }
 });
+
+app.get("/participants", async (req, res) => {
+  try {
+    const participant = await db.collection("participants").find().toArray();
+
+    if (!participant) return res.sendStatus(404);
+
+    res.send(participant);
+  } catch (error) {
+    console.log(error);
+    res.sendStatus(500);
+  }
+});
+
+
 
 app.listen(5000, () => {
   console.log("server online, rodando na port5000");
