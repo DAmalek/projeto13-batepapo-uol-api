@@ -164,6 +164,28 @@ app.post("/status", async (req, res) => {
   }
 });
 
+setInterval(async () => {
+    const tenSecondsAgo = Date.now() - 10000
+
+    try{
+        const afk = await db.collection('participants').find({lastStatus: {$lte: tenSecondsAgo}}).toArray();
+
+        if (afk.length > 0){
+          const afkMessages = afk.map(value => {
+            return {
+              from: value.name,
+              to:"Todos",
+              text:'saiu da sala...',
+              type: 'status',
+              time: dayjs().format('HH:mm:ss'),
+            }
+          })
+        }
+    } catch (error) {
+        console.log(error)
+    }
+}, 15000);
+
 app.listen(5000, () => {
   console.log("server online, rodando na port5000");
 });
