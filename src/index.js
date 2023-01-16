@@ -130,10 +130,34 @@ app.get("/messages", async (req, res) => {
           { to: { $in: [user, "Todos"] } },
           { type: "message" },
         ],
-      }).limit(maxMassages)
+      })
+      .limit(maxMassages)
       .toArray();
 
     res.send(messages);
+  } catch (error) {
+    console.log(error);
+    res.sendStatus(500);
+  }
+});
+
+app.post("/status", async (req, res) => {
+  const { user } = req.headers;
+
+  try {
+    const userExists = await db
+      .collection("participants")
+      .findOne({ name: user });
+
+    if (!userExists) {
+      res.status(404).send("usuario não encontrado");
+    }
+
+    await db
+      .collection("participants")
+      .updateOne({ name: user }, { $set: { lastStatus: Date.now() } });
+
+    res.status(200).send("ok...");
   } catch (error) {
     console.log(error);
     res.sendStatus(500);
