@@ -15,6 +15,14 @@ const usersSchema = joi.object({
   name: joi.string().min(2).max(20).required(),
 });
 
+const messageSchema = joi.object({
+    from: joi.string().required(),
+    to: joi.string().min(2).required(),
+    text: joi.string().min(1).required(),
+    type: joi.string().required().valid("message", "private_message"),
+    time: joi.string(),
+})
+
 try {
   await mongoClient.connect();
   db = mongoClient.db();
@@ -31,8 +39,8 @@ app.post("/participants", async (req, res) => {
 
   const validation = usersSchema.validate({ name }, { abortEarly: false });
   if (validation.error) {
-    const errors = validation.error.details.map(detail => detail.message)
-    res.send(errors)
+    const errors = validation.error.details.map((detail) => detail.message);
+    res.send(errors);
   }
 
   const entryMessage = {
@@ -79,7 +87,46 @@ app.get("/participants", async (req, res) => {
   }
 });
 
+app.post("/messages", async (req, res) => {
+  const { to, text, type } = req.body;
+  const { user } = req.headers;
 
+  const message = {
+    from: user,
+    to,
+    text,
+    type,
+    time: dayjs().format("HH:mm:ss"),
+  }
+
+  try {
+    const validation = messageSchema.validate(message, {abortEarly:false});
+
+    if (validation.error) {
+        const errors = validation.error.details.map(detail => detail.message);
+        res.status(422).send(errors);
+    }
+
+    await db.collection("messages").insertOne(message);
+
+    res.status(201).send('beleza...')
+
+  } catch (error) {
+    console.log(error);
+    res.sendStatus(500);
+  }
+});
+
+app.get("messages", async (req, res) => {
+    try{
+    const messages = await db.collection("messages").find().toArray();
+
+    res.send(messages)        
+    }catch (error) {
+    console.log(error);
+    res.sendStatus(500);
+  }
+})
 
 app.listen(5000, () => {
   console.log("server online, rodando na port5000");
