@@ -16,12 +16,12 @@ const usersSchema = joi.object({
 });
 
 const messageSchema = joi.object({
-    from: joi.string().required(),
-    to: joi.string().min(2).required(),
-    text: joi.string().min(1).required(),
-    type: joi.string().required().valid("message", "private_message"),
-    time: joi.string(),
-})
+  from: joi.string().required(),
+  to: joi.string().min(2).required(),
+  text: joi.string().min(1).required(),
+  type: joi.string().required().valid("message", "private_message"),
+  time: joi.string(),
+});
 
 try {
   await mongoClient.connect();
@@ -97,36 +97,48 @@ app.post("/messages", async (req, res) => {
     text,
     type,
     time: dayjs().format("HH:mm:ss"),
-  }
+  };
 
   try {
-    const validation = messageSchema.validate(message, {abortEarly:false});
+    const validation = messageSchema.validate(message, { abortEarly: false });
 
     if (validation.error) {
-        const errors = validation.error.details.map(detail => detail.message);
-        res.status(422).send(errors);
+      const errors = validation.error.details.map((detail) => detail.message);
+      res.status(422).send(errors);
     }
 
     await db.collection("messages").insertOne(message);
 
-    res.status(201).send('beleza...')
-
+    res.status(201).send("beleza...");
   } catch (error) {
     console.log(error);
     res.sendStatus(500);
   }
 });
 
-app.get("messages", async (req, res) => {
-    try{
-    const messages = await db.collection("messages").find().toArray();
+app.get("/messages", async (req, res) => {
+  const maxMassages = Number(req.query.limit);
+  const user = req.headers.user;
 
-    res.send(messages)        
-    }catch (error) {
+  try {
+    const messages = await db
+
+      .collection("messages")
+      .find({
+        $or: [
+          { from: user },
+          { to: { $in: [user, "Todos"] } },
+          { type: "message" },
+        ],
+      }).limit(maxMassages)
+      .toArray();
+
+    res.send(messages);
+  } catch (error) {
     console.log(error);
     res.sendStatus(500);
   }
-})
+});
 
 app.listen(5000, () => {
   console.log("server online, rodando na port5000");
