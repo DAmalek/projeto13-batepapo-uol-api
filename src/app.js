@@ -165,25 +165,33 @@ app.post("/status", async (req, res) => {
 });
 
 setInterval(async () => {
-    const tenSecondsAgo = Date.now() - 10000
+  const tenSecondsAgo = Date.now() - 10000;
 
-    try{
-        const afk = await db.collection('participants').find({lastStatus: {$lte: tenSecondsAgo}}).toArray();
+  try {
+    const afk = await db
+      .collection("participants")
+      .find({ lastStatus: { $lte: tenSecondsAgo } })
+      .toArray();
 
-        if (afk.length > 0){
-          const afkMessages = afk.map(value => {
-            return {
-              from: value.name,
-              to:"Todos",
-              text:'saiu da sala...',
-              type: 'status',
-              time: dayjs().format('HH:mm:ss'),
-            }
-          })
-        }
-    } catch (error) {
-        console.log(error)
+    if (afk.length > 0) {
+      const afkMessages = afk.map((value) => {
+        return {
+          from: value.name,
+          to: "Todos",
+          text: "saiu da sala...",
+          type: "status",
+          time: dayjs().format("HH:mm:ss"),
+        };
+      });
+
+      await db.collection("messages").insertMany(afkMessages);
+      await db
+        .collection("messages")
+        .deleteMany({ lastStatus: { $lte: tenSecondsAgo } });
     }
+  } catch (error) {
+    console.log(error);
+  }
 }, 15000);
 
 app.listen(5000, () => {
