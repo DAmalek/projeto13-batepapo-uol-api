@@ -125,8 +125,6 @@ app.get("/messages", async (req, res) => {
   const maxMassages = Number(req.query.limit);
   const user = req.headers.user;
 
-  if (typeof maxMassages != NaN || maxMassages <= 0) return res.sendStatus(422)
-
   try {
     const messages = await db
 
