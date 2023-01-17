@@ -40,7 +40,7 @@ app.post("/participants", async (req, res) => {
   const validation = usersSchema.validate({ name }, { abortEarly: false });
   if (validation.error) {
     const errors = validation.error.details.map((detail) => detail.message);
-    res.send(errors);
+    res.status(422).send(errors);
   }
 
   const entryMessage = {
@@ -100,6 +100,11 @@ app.post("/messages", async (req, res) => {
   };
 
   try {
+    const userExists = await db
+      .collection("participants")
+      .findOne({ name: user });
+    
+    if (!userExists) return res.status(422).send("user n existe!!")
     const validation = messageSchema.validate(message, { abortEarly: false });
 
     if (validation.error) {
@@ -186,7 +191,7 @@ setInterval(async () => {
 
       await db.collection("messages").insertMany(afkMessages);
       await db
-        .collection("messages")
+        .collection("participants")
         .deleteMany({ lastStatus: { $lte: tenSecondsAgo } });
     }
   } catch (error) {
