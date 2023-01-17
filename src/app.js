@@ -125,7 +125,7 @@ app.get("/messages", async (req, res) => {
   const maxMassages = Number(req.query.limit);
   const user = req.headers.user;
 
-  
+  if (typeof maxMassages != NaN || maxMassages <= 0) return res.sendStatus(422)
 
   try {
     const messages = await db
@@ -170,7 +170,7 @@ app.post("/status", async (req, res) => {
   }
 });
 
-/* setInterval(async () => {
+setInterval(async () => {
   const tenSecondsAgo = Date.now() - 10000;
 
   try {
@@ -198,7 +198,7 @@ app.post("/status", async (req, res) => {
   } catch (error) {
     console.log(error);
   }
-}, 15000); */
+}, 15000);
 
 app.listen(5000, () => {
   console.log("server online, rodando na port5000");
