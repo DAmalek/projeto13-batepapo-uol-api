@@ -125,6 +125,8 @@ app.get("/messages", async (req, res) => {
   const maxMassages = Number(req.query.limit);
   const user = req.headers.user;
 
+  
+
   try {
     const messages = await db
 
@@ -136,10 +138,9 @@ app.get("/messages", async (req, res) => {
           { type: "message" },
         ],
       })
-      .limit(maxMassages)
       .toArray();
-
-    res.send(messages);
+    const start = messages.length - maxMassages;
+    res.send(messages.slice(start));
   } catch (error) {
     console.log(error);
     res.sendStatus(500);
@@ -169,7 +170,7 @@ app.post("/status", async (req, res) => {
   }
 });
 
-setInterval(async () => {
+/* setInterval(async () => {
   const tenSecondsAgo = Date.now() - 10000;
 
   try {
@@ -197,7 +198,7 @@ setInterval(async () => {
   } catch (error) {
     console.log(error);
   }
-}, 15000);
+}, 15000); */
 
 app.listen(5000, () => {
   console.log("server online, rodando na port5000");
